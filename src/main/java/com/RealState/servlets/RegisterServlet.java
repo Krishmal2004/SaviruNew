@@ -1,18 +1,19 @@
 package com.RealState.servlets;
-
+ 
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.WebServlet;
-import org.json.simple.*;
-import org.json.simple.parser.*;
-
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+ 
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         // Get form parameters
@@ -23,8 +24,8 @@ public class RegisterServlet extends HttpServlet {
         String password = request.getParameter("password");
         String userType = request.getParameter("userType");
         
-        // Create JSON object with user data
-        JSONObject userData = new JSONObject();
+        // Create user data as a Map
+        Map<String, String> userData = new HashMap<>();
         userData.put("firstName", firstName);
         userData.put("lastName", lastName);
         userData.put("email", email);
@@ -41,31 +42,38 @@ public class RegisterServlet extends HttpServlet {
         
         File jsonFile = new File(filePath);
         
-        // Create JSON array to store users
-        JSONArray userList = new JSONArray();
+        // Create Gson instance
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        
+        // Initialize list to store users
+        List<Map<String, String>> userList = new ArrayList<>();
         
         // If file exists, read existing data
         if (jsonFile.exists()) {
-            try (FileReader reader = new FileReader(jsonFile)) {
-                JSONParser parser = new JSONParser();
-                Object obj = parser.parse(reader);
-                userList = (JSONArray) obj;
+            try (Reader reader = new FileReader(jsonFile)) {
+                // Create a Type for List<Map<String, String>>
+                Type userListType = new TypeToken<List<Map<String, String>>>(){}.getType();
+                userList = gson.fromJson(reader, userListType);
+                
+                // If parsing returns null, initialize with empty list
+                if (userList == null) {
+                    userList = new ArrayList<>();
+                }
             } catch (Exception e) {
-                // If parsing fails, start with empty array
-                userList = new JSONArray();
+                // If parsing fails, start with empty list
+                userList = new ArrayList<>();
             }
         }
         
-        // Add new user to the array
+        // Add new user to the list
         userList.add(userData);
         
         // Ensure directory exists
         jsonFile.getParentFile().mkdirs();
         
         // Write updated JSON back to file
-        try (FileWriter file = new FileWriter(jsonFile)) {
-            file.write(userList.toJSONString());
-            file.flush();
+        try (Writer writer = new FileWriter(jsonFile)) {
+            gson.toJson(userList, writer);
         } catch (IOException e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to save user data");
