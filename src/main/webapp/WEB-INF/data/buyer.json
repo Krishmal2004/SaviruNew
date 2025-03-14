@@ -1,0 +1,20 @@
+[
+  {
+    "firstName": "krishmal",
+    "lastName":"dinidu",
+    "email": "john@example.com",
+	"phone": "123-456-7890",
+    "password": "password1",
+    "confirmPassword": "password1"
+    
+    
+  },
+  {
+    "firstName": "janiya",
+    "lastName":"ometh",
+    "email": "ometh@example.com",
+	"phone": "123-456-9620",
+    "password": "password2",
+    "confirmPassword": "password2"
+  }
+]
